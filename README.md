@@ -23,45 +23,22 @@
 
 </div>
 
-A comprehensive analytics and data management platform built with Next.js, TypeScript, and modern web technologies. Databuddy provides real-time analytics, user tracking, and data visualization capabilities for web applications.
+Databuddy is a **full-stack, self-hostable analytics platform** built with **Next.js + Bun**. It ships a real-time dashboard, event ingestion pipeline, and a type-safe API layer.
 
-## 🌟 Features
+## What’s inside
 
-- 📊 Real-time analytics dashboard
-- 👥 User behavior tracking
-- 📈 Advanced data visualization // Soon
-- 🔒 Secure authentication
-- 📱 Responsive design
-- 🌐 Multi-tenant support
-- 🔄 Real-time updates // Soon
-- 📊 Custom metrics // Soon
-- 🎯 Goal tracking
-- 📈 Conversion analytics
-- 🔍 Custom event tracking
-- 📊 Funnel analysis
-- 📈 Cohort analysis // Soon
-- 🔄 A/B testing // Soon
-- 📈 Export capabilities
-- 🔒 GDPR compliance
-- 🔐 Data encryption
-- 📊 API access
+- **Dashboard** (Next.js): analytics UI, org/workspace UX, agent surfaces
+- **API** (Elysia): type-safe procedures, auth, webhooks, internal services
+- **Basket**: ingestion + tracking pipeline
+- **Links**: short links + click tracking + deep links
+- **Packages**: shared DB schema/clients, RPC contracts, auth, SDK, tracker, redis/cache helpers
 
-## 📚 Table of Contents
+## Quick start (self-host)
 
-1. **How do I get started?**
-   Follow the [Getting Started](https://www.databuddy.cc/docs/getting-started) guide.
-- [Contributing](#-contributing)
-- [Security](#-security)
-- [FAQ](#-faq)
-- [Support](#-support)
-- [License](#-license)
-
-### Prerequisites
-
+Prereqs:
 - Bun 1.3.4+
 - Node.js 20+
-
-## 🏠 Self-Hosting
+- Docker (for Postgres + ClickHouse + Redis)
 
 Databuddy can be self-hosted using Docker Compose. The repo includes two compose files:
 
@@ -69,8 +46,6 @@ Databuddy can be self-hosted using Docker Compose. The repo includes two compose
 |---|---|
 | `docker-compose.yaml` | **Development only** — starts infrastructure (Postgres, ClickHouse, Redis) for local dev |
 | `docker-compose.selfhost.yml` | **Production / self-hosting** — backend services from GHCR images |
-
-### Quick Start
 
 ```bash
 # 1. Configure environment
@@ -96,6 +71,21 @@ Services started:
 - **Uptime** monitoring is optional — uncomment in the compose file to run the Redis-backed BullMQ worker.
 
 All ports are configurable via env vars (`API_PORT`, `BASKET_PORT`, etc.). See the compose file comments for the full env var reference.
+
+## Recent security hardening (Aureon)
+
+This repo recently received a defense-in-depth hardening pass focused on **redirects, SSRF, webhooks, and CI regression prevention**:
+
+- **Deep links**: require hostname allowlist + http(s) target before generating custom-scheme deep links
+- **Links redirects**: block non-http(s) `targetUrl`/`iosUrl`/`androidUrl`, exclude soft-deleted rows, validate `expiredRedirectUrl`
+- **SSRF guard**: resolves **both A + AAAA**; rejects any private/reserved resolution
+- **Stripe webhook**: signature verification hardened with strict hex constant-time compare
+- **Paddle webhook**: signature verification uses shared constant-time hex compare (no Node crypto dependency)
+- **Public API CORS**: sets `Vary: Origin` to avoid cache poisoning / `Vary: *` issues on permissive CORS
+- **Docs forms**: stricter URL validation (http/https only, hostname sanity)
+- **Docs CMS HTML**: sanitized before rendering in `Prose` to reduce stored-XSS risk
+- **Agent tool policy gateway**: centralized server-side gates for agent SQL + SSRF-protected outbound URLs
+- **CI regression scan**: `bun run security:regression-check` denylist to prevent reintroducing high-risk patterns
 
 ## 🤝 Contributing
 
@@ -142,3 +132,5 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See the [LICENSE](LICENSE) file for details.
 
 Copyright (c) 2025 Databuddy Analytics, Inc.
+
+#HouseOfAsher
