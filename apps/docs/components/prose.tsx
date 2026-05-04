@@ -1,11 +1,13 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
+import { sanitizeHtmlForDocs } from "@/lib/html-sanitize";
 
 interface ProseProps extends ComponentPropsWithoutRef<"article"> {
 	html: string;
 }
 
 export function Prose({ children, html, className }: ProseProps) {
+	const sanitizedHtml = sanitizeHtmlForDocs(html);
 	return (
 		<article
 			className={cn(
@@ -40,7 +42,11 @@ export function Prose({ children, html, className }: ProseProps) {
 				className
 			)}
 		>
-			{html ? <div dangerouslySetInnerHTML={{ __html: html }} /> : children}
+			{sanitizedHtml ? (
+				<div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
+			) : (
+				children
+			)}
 		</article>
 	);
 }
