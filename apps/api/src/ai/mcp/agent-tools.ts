@@ -1,10 +1,6 @@
 import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
-import {
-	AGENT_SQL_VALIDATION_ERROR,
-	requiresTenantFilter,
-	validateAgentSQL,
-} from "@databuddy/db/clickhouse";
+import { assertAgentClickHouseSqlPolicy } from "@databuddy/shared/policy/agent-tool-gateway";
 import { tool } from "ai";
 import { z } from "zod";
 import { getAccessibleWebsites } from "../../lib/accessible-websites";
@@ -150,15 +146,7 @@ export function createMcpAgentTools() {
 				if (access instanceof Error) {
 					throw new Error(access.message);
 				}
-				const validation = validateAgentSQL(sql);
-				if (!validation.valid) {
-					throw new Error(validation.reason ?? AGENT_SQL_VALIDATION_ERROR);
-				}
-				if (!requiresTenantFilter(sql)) {
-					throw new Error(
-						"Query must include tenant isolation: WHERE client_id = {websiteId:String}"
-					);
-				}
+				assertAgentClickHouseSqlPolicy(sql);
 				const result = await executeTimedQuery(
 					"MCP Agent SQL",
 					sql,

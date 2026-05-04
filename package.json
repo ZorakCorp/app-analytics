@@ -40,6 +40,7 @@
     "test:watch": "dotenv -- bun test --watch ./apps",
     "test:coverage": "dotenv -- bun test --coverage ./apps",
     "lint": "bunx ultracite check",
+    "security:regression-check": "bun run scripts/ci/security-regression-check.ts",
     "format": "bunx ultracite fix",
     "check-types": "dotenv -- turbo run check-types",
     "generate-db": "turbo run generate --filter=@databuddy/db",

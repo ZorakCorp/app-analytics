@@ -35,6 +35,7 @@
     "./bot-detection/types": "./src/utils/bot-detection/types.ts",
     "./bot-detection/user-agent": "./src/utils/bot-detection/user-agent.ts",
     "./ssrf-guard": "./src/ssrf-guard.ts",
+    "./policy/agent-tool-gateway": "./src/policy/agent-tool-gateway.ts",
     "./constants/deep-link-apps": "./src/constants/deep-link-apps.ts"
   },
   "scripts": {

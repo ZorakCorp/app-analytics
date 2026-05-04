@@ -1,4 +1,7 @@
-import { validateUrl } from "@databuddy/shared/ssrf-guard";
+import {
+	assertSsrfProtectedHttpUrl,
+	ToolPolicyRejectedError,
+} from "@databuddy/shared/policy/agent-tool-gateway";
 import { type NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_CONTENT_TYPES = [
@@ -21,12 +24,16 @@ export async function GET(request: NextRequest) {
 		);
 	}
 
-	const check = await validateUrl(url);
-	if (!check.safe) {
-		return NextResponse.json(
-			{ error: check.error ?? "URL not allowed" },
-			{ status: 400 }
-		);
+	try {
+		await assertSsrfProtectedHttpUrl(url);
+	} catch (error) {
+		if (error instanceof ToolPolicyRejectedError) {
+			return NextResponse.json(
+				{ error: error.message ?? "URL not allowed" },
+				{ status: 400 }
+			);
+		}
+		throw error;
 	}
 
 	try {

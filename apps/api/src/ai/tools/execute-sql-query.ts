@@ -1,8 +1,4 @@
-import {
-	AGENT_SQL_VALIDATION_ERROR,
-	requiresTenantFilter,
-	validateAgentSQL,
-} from "@databuddy/db/clickhouse";
+import { assertAgentClickHouseSqlPolicy } from "@databuddy/shared/policy/agent-tool-gateway";
 import { tool } from "ai";
 import { z } from "zod";
 import { executeTimedQuery, type QueryResult } from "./utils";
@@ -31,16 +27,7 @@ Tables: analytics.events (client_id, anonymous_id, session_id, time, path, refer
 			),
 	}),
 	execute: async ({ sql, websiteId, params }): Promise<QueryResult> => {
-		const validation = validateAgentSQL(sql);
-		if (!validation.valid) {
-			throw new Error(validation.reason ?? AGENT_SQL_VALIDATION_ERROR);
-		}
-
-		if (!requiresTenantFilter(sql)) {
-			throw new Error(
-				"Query must include tenant isolation: WHERE client_id = {websiteId:String}"
-			);
-		}
+		assertAgentClickHouseSqlPolicy(sql);
 
 		const result = await executeTimedQuery("Execute SQL Tool", sql, {
 			websiteId,
