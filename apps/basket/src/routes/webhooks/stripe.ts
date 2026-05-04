@@ -129,9 +129,15 @@ export function verifyStripeSignature(
 		.update(signedPayload, "utf8")
 		.digest("hex");
 
-	const signatureMatch = signatures.some((sig) => {
+	const signatureMatch = signatures.some((sigRaw) => {
+		const sig = sigRaw.trim().toLowerCase();
 		try {
-			return timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(sig));
+			const expectedBuf = Buffer.from(expectedSignature, "hex");
+			const sigBuf = Buffer.from(sig, "hex");
+			if (sigBuf.length === 0 || sigBuf.length !== expectedBuf.length) {
+				return false;
+			}
+			return timingSafeEqual(expectedBuf, sigBuf);
 		} catch {
 			return false;
 		}

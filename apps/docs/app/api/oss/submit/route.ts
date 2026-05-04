@@ -59,6 +59,9 @@ function isValidEmail(email: string): boolean {
 function isGitHubRepoUrl(value: string): boolean {
 	try {
 		const url = new URL(value);
+		if (url.protocol !== "http:" && url.protocol !== "https:") {
+			return false;
+		}
 		if (url.hostname !== "github.com" && url.hostname !== "www.github.com") {
 			return false;
 		}

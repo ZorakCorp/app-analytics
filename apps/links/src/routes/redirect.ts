@@ -96,7 +96,31 @@ function parseUA(ua: string | null): {
 	}
 }
 
-function getTargetUrl(link: CachedLink, ua: string | null): string {
+/** Defensive guard for redirects from DB/cache (legacy rows, bypassed validation). */
+function safeHttpRedirectDestination(url: string | null): string | null {
+	if (!url) {
+		return null;
+	}
+	try {
+		const parsed = new URL(url);
+		if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+			return null;
+		}
+		return url;
+	} catch {
+		return null;
+	}
+}
+
+function safeHttpStoredDestination(url: string | null | undefined): string | null {
+	if (url == null || url === "") {
+		return null;
+	}
+	return safeHttpRedirectDestination(url);
+}
+
+/** Picks platform URL when allowed; skips stored values that are not http(s). */
+function getTargetUrl(link: CachedLink, ua: string | null): string | null {
 	if (ua) {
 		const lower = ua.toLowerCase();
 		if (
@@ -105,13 +129,19 @@ function getTargetUrl(link: CachedLink, ua: string | null): string {
 				lower.includes("ipad") ||
 				lower.includes("ipod"))
 		) {
-			return link.iosUrl;
+			const ios = safeHttpStoredDestination(link.iosUrl);
+			if (ios) {
+				return ios;
+			}
 		}
 		if (link.androidUrl && lower.includes("android")) {
-			return link.androidUrl;
+			const android = safeHttpStoredDestination(link.androidUrl);
+			if (android) {
+				return android;
+			}
 		}
 	}
-	return link.targetUrl;
+	return safeHttpStoredDestination(link.targetUrl);
 }
 
 function isMobile(ua: string | null): boolean {
@@ -178,7 +208,7 @@ async function lookupLink(slug: string) {
 	const t1 = performance.now();
 	const row = await record("link.db.find", () =>
 		db.query.links.findFirst({
-			where: { slug },
+			where: { slug, deletedAt: { isNull: true } },
 			columns: {
 				id: true,
 				targetUrl: true,
@@ -365,11 +395,19 @@ export const redirectRoute = new Elysia().get(
 		if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
 			emit("expired");
 			set.headers = { "Cache-Control": "private, no-store" };
-			return redirect(link.expiredRedirectUrl ?? EXPIRED_URL, 302);
+			return redirect(
+				safeHttpRedirectDestination(link.expiredRedirectUrl) ?? EXPIRED_URL,
+				302
+			);
 		}
 
 		const userAgent = request.headers.get("user-agent");
 		const targetUrl = getTargetUrl(link, userAgent);
+		if (!targetUrl) {
+			emit("invalid_target");
+			set.headers = { "Cache-Control": "private, no-store" };
+			return redirect(NOT_FOUND_URL, 302);
+		}
 		const bot = checkBot(userAgent);
 		ev.is_bot = bot.isBot;
 		ev.is_social_bot = bot.isSocial;

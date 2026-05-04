@@ -57,12 +57,16 @@ function isValidEmail(email: string): boolean {
 }
 
 function isValidUrl(value: string): boolean {
-	const url =
-		value.startsWith("http") || value.startsWith("//")
-			? value
-			: `https://${value}`;
+	const trimmed = value.trim();
+	const urlInput =
+		trimmed.startsWith("http://") || trimmed.startsWith("https://")
+			? trimmed
+			: `https://${trimmed}`;
 	try {
-		const parsed = new URL(url);
+		const parsed = new URL(urlInput);
+		if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+			return false;
+		}
 		return parsed.hostname.includes(".") && URL_TLD_REGEX.test(parsed.hostname);
 	} catch {
 		return false;

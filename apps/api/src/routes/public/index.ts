@@ -25,6 +25,10 @@ export const publicApi = new Elysia({ prefix: "/public" })
 			origin: true,
 		})
 	)
+	.onAfterHandle(({ set }) => {
+		// Reflect request Origin for caches instead of Vary: * from permissive CORS.
+		set.headers.vary = "Origin";
+	})
 	.options("*", () => new Response(null, { status: 204 }))
 	.use(agentTelemetryRoute)
 	.use(flagsRoute)

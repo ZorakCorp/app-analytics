@@ -106,5 +106,14 @@ export default async function LinkProxyPage({
 		notFound();
 	}
 
+	try {
+		const parsed = new URL(link.targetUrl);
+		if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+			notFound();
+		}
+	} catch {
+		notFound();
+	}
+
 	redirect(link.targetUrl);
 }

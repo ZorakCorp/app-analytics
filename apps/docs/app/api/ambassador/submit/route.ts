@@ -48,10 +48,21 @@ function isValidEmail(email: string): boolean {
 	return email.includes("@") && email.length > 3;
 }
 
-function isValidURL(url: string): boolean {
+/** Only http(s) with a plausible public hostname — avoids javascript:/data: in Slack payloads. */
+function isValidHTTPSiteUrl(raw: string): boolean {
+	const trimmed = raw.trim();
+	const withScheme =
+		trimmed.startsWith("http://") || trimmed.startsWith("https://")
+			? trimmed
+			: `https://${trimmed}`;
 	try {
-		new URL(url);
-		return true;
+		const parsed = new URL(withScheme);
+		if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+			return false;
+		}
+		return (
+			parsed.hostname.includes(".") && /\.[a-z]{2,}$/i.test(parsed.hostname)
+		);
 	} catch {
 		return false;
 	}
@@ -109,7 +120,7 @@ function validateFormData(data: unknown): ValidationResult {
 		website &&
 		typeof website === "string" &&
 		website.length > 0 &&
-		!isValidURL(website)
+		!isValidHTTPSiteUrl(website)
 	) {
 		errors.push("Website must be a valid URL");
 	}

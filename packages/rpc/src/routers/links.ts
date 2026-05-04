@@ -365,6 +365,15 @@ export const linksRouter = {
 			});
 
 			validateHttpUrl(input.targetUrl);
+			if (input.expiredRedirectUrl) {
+				validateHttpUrl(input.expiredRedirectUrl);
+			}
+			if (input.iosUrl) {
+				validateHttpUrl(input.iosUrl);
+			}
+			if (input.androidUrl) {
+				validateHttpUrl(input.androidUrl);
+			}
 			const createdBy = await workspace.getCreatedBy();
 			const resolvedFolderId = await resolveFolderId(
 				context.db,
@@ -469,6 +478,15 @@ export const linksRouter = {
 
 			if (input.targetUrl) {
 				validateHttpUrl(input.targetUrl);
+			}
+			if (input.expiredRedirectUrl) {
+				validateHttpUrl(input.expiredRedirectUrl);
+			}
+			if (input.iosUrl) {
+				validateHttpUrl(input.iosUrl);
+			}
+			if (input.androidUrl) {
+				validateHttpUrl(input.androidUrl);
 			}
 
 			let resolvedFolderId: string | null | undefined;

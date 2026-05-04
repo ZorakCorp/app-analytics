@@ -227,6 +227,15 @@ export function getDeepLinkAppByHostname(
 	return HOST_MAP.get(hostname);
 }
 
+/** Host must match one of this app's HTTPS landing domains before custom-scheme redirects. */
+export function hostnameAllowedForDeepLinkApp(
+	app: DeepLinkApp,
+	hostname: string
+): boolean {
+	const lowered = hostname.toLowerCase();
+	return app.hostnames.some((allowed) => allowed.toLowerCase() === lowered);
+}
+
 export function resolveDeepLink(
 	appId: string,
 	targetUrl: string
@@ -235,9 +244,17 @@ export function resolveDeepLink(
 	if (!app) {
 		return null;
 	}
+	let url: URL;
 	try {
-		return app.resolveUri(new URL(targetUrl));
+		url = new URL(targetUrl);
 	} catch {
 		return null;
 	}
+	if (url.protocol !== "http:" && url.protocol !== "https:") {
+		return null;
+	}
+	if (!hostnameAllowedForDeepLinkApp(app, url.hostname)) {
+		return null;
+	}
+	return app.resolveUri(url);
 }
