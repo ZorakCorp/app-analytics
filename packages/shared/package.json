@@ -25,6 +25,7 @@
     "./types/query": "./src/types/query.ts",
     "./types/sessions": "./src/types/sessions.ts",
     "./types/website": "./src/types/website.ts",
+    "./security/constant-time": "./src/security/constant-time.ts",
     "./flags": "./src/flags/index.ts",
     "./flags/utils": "./src/flags/utils.ts",
     "./utils/date-utils": "./src/utils/date-utils.ts",

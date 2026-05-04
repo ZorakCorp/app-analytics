@@ -1,5 +1,6 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { clickHouse } from "@databuddy/db/clickhouse";
+import { timingSafeEqualHex } from "@databuddy/shared/security/constant-time";
 import { Elysia } from "elysia";
 import { evlog, useLogger } from "evlog/elysia";
 import { getDailySalt, saltAnonymousId } from "@lib/security";
@@ -131,16 +132,7 @@ export function verifyStripeSignature(
 
 	const signatureMatch = signatures.some((sigRaw) => {
 		const sig = sigRaw.trim().toLowerCase();
-		try {
-			const expectedBuf = Buffer.from(expectedSignature, "hex");
-			const sigBuf = Buffer.from(sig, "hex");
-			if (sigBuf.length === 0 || sigBuf.length !== expectedBuf.length) {
-				return false;
-			}
-			return timingSafeEqual(expectedBuf, sigBuf);
-		} catch {
-			return false;
-		}
+		return timingSafeEqualHex(expectedSignature, sig);
 	});
 
 	if (!signatureMatch) {

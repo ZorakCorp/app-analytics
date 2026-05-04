@@ -1,5 +1,5 @@
-import { timingSafeEqual } from "node:crypto";
 import { clickHouse } from "@databuddy/db/clickhouse";
+import { timingSafeEqualHex } from "@databuddy/shared/security/constant-time";
 import { Elysia } from "elysia";
 import { evlog, useLogger } from "evlog/elysia";
 import { getDailySalt, saltAnonymousId } from "@lib/security";
@@ -74,12 +74,7 @@ async function verifySignature(
 			.map((b) => b.toString(16).padStart(2, "0"))
 			.join("");
 
-		const sigBuffer = Buffer.from(signature, "utf8");
-		const expectedBuffer = Buffer.from(expected, "utf8");
-		return (
-			sigBuffer.length === expectedBuffer.length &&
-			timingSafeEqual(sigBuffer, expectedBuffer)
-		);
+		return timingSafeEqualHex(expected, signature);
 	} catch {
 		return false;
 	}
